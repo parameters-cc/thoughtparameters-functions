@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions/v2";
+import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 const db = admin.firestore();
@@ -8,8 +8,8 @@ const db = admin.firestore();
  * - Initializes the user's Firestore profile document
  * - Sets default role and preferences
  */
-export const onUserCreate = functions.auth.onUserCreated(async (event) => {
-  const { uid, email, displayName, photoURL } = event.data;
+export const onUserCreate = functions.auth.user().onCreate(async (user) => {
+  const { uid, email, displayName, photoURL } = user;
 
   const userRef = db.collection("users").doc(uid);
 

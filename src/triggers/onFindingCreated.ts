@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions/v2";
+import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 const db = admin.firestore();
@@ -19,10 +19,10 @@ const ALERT_SEVERITIES = new Set(["critical", "high"]);
  * Fires when a new security finding is written to Firestore.
  * Sends FCM push notifications to all admin users for critical/high findings.
  */
-export const onFindingCreated = functions.firestore.onDocumentCreated(
-  "findings/{findingId}",
-  async (event) => {
-    const finding = event.data?.data() as Finding | undefined;
+export const onFindingCreated = functions.firestore
+  .document("findings/{findingId}")
+  .onCreate(async (snap, context) => {
+    const finding = snap.data() as Finding | undefined;
     if (!finding) return;
 
     if (!ALERT_SEVERITIES.has(finding.severity) || finding.status !== "open") {
@@ -56,7 +56,7 @@ export const onFindingCreated = functions.firestore.onDocumentCreated(
         body: `${finding.title} — ${finding.targetName}`,
       },
       data: {
-        findingId: event.params.findingId,
+        findingId: context.params.findingId,
         severity: finding.severity,
         targetId: finding.targetId,
         type: "security_finding",
@@ -84,5 +84,4 @@ export const onFindingCreated = functions.firestore.onDocumentCreated(
         `FCM batch sent: ${response.successCount} success, ${response.failureCount} failed`
       );
     }
-  }
-);
+  });
